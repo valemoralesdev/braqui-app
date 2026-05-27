@@ -590,8 +590,8 @@ const BraquiApp = () => {
       ...prev,
       nombre_paciente: '', historia_clinica: '', id_paciente: '',
       diagnostico: '', medico_responsable: '', fisico_medico: '',
-      fecha_colocacion: '', tiempo_tratamiento_horas: 48,
-      dosis_prescripta_braqui: 4000,
+      fecha_colocacion: '', tiempo_tratamiento_horas: '',
+      dosis_prescripta_braqui: '',
       ids_fuentes: [],
       posiciones: { f1: null, f2: null, f3: null, f4: null, f5: null },
     }));
