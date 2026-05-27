@@ -378,11 +378,11 @@ const BraquiApp = () => {
     medico_responsable: '',
     fisico_medico: '',
     fecha_colocacion: '',
-    tiempo_tratamiento_horas: 48,
+    tiempo_tratamiento_horas: '',
     aplicador: 'fletcher',
     ids_fuentes: [],
     posiciones: { f1: null, f2: null, f3: null, f4: null, f5: null },
-    dosis_prescripta_braqui: 4000,
+    dosis_prescripta_braqui: '',
     dosis_externa_gy: 0,
     fraccionamiento_externa: 2,
     dosis_punto_a: '',
@@ -1091,9 +1091,9 @@ const BraquiApp = () => {
                         <div className="w-full border-t border-dashed border-slate-300 my-1" />
                         {/* Ovoides (izq y der) */}
                         <div className="flex justify-center gap-3 w-full">
-                          <div className="w-28"><Slot id="f4" label="Ovoide D" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
+                          <div className="w-28"><Slot id="f4" label="Ovoide I" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
                           <div className="w-28 invisible" />
-                          <div className="w-28"><Slot id="f5" label="Ovoide I" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
+                          <div className="w-28"><Slot id="f5" label="Ovoide D" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
                         </div>
                       </div>
                     ) : (
