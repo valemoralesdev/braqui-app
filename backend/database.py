@@ -59,21 +59,24 @@ class Plan(Base):
 
 
 def init_db():
-    """Crea tablas y carga profesionales si la DB está vacía."""
+    """Crea tablas y carga profesionales si la DB está vacía. Agrega faltantes si ya existe."""
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        if db.query(Medico).count() == 0:
-            profesionales = [
-                Medico(nombre="Darío",     apellido="Llanos",   especialidad="medico"),
-                Medico(nombre="Ignacio",   apellido="Abregu",   especialidad="medico"),
-                Medico(nombre="José Luis", apellido="Castilla", especialidad="medico"),
-                Medico(nombre="Marcelo",   apellido="Guzmán",   especialidad="medico"),
-                Medico(nombre="Jorge",     apellido="Escobar",  especialidad="fisico"),
-                Medico(nombre="Mauricio",  apellido="Franco",   especialidad="fisico"),
-            ]
-            db.add_all(profesionales)
-            db.commit()
+        profesionales = [
+            Medico(nombre="Darío",     apellido="Llanos",    especialidad="medico"),
+            Medico(nombre="Ignacio",   apellido="Abregu",    especialidad="medico"),
+            Medico(nombre="José Luis", apellido="Castilla",  especialidad="medico"),
+            Medico(nombre="Marcelo",   apellido="Guzmán",    especialidad="medico"),
+            Medico(nombre="Jorge",     apellido="Escobar",   especialidad="fisico"),
+            Medico(nombre="Mauricio",  apellido="Franco",    especialidad="fisico"),
+            Medico(nombre="Pedro",     apellido="Fernandez", especialidad="fisico"),
+        ]
+        for p in profesionales:
+            existe = db.query(Medico).filter_by(nombre=p.nombre, apellido=p.apellido).first()
+            if not existe:
+                db.add(p)
+        db.commit()
     finally:
         db.close()
 
