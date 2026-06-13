@@ -367,7 +367,8 @@ const BraquiApp = () => {
   // ── Archivos externos ──
   const [dvhStatus, setDvhStatus] = useState(null);
   const [eclipseStatus, setEclipseStatus] = useState(null);
-  const [organosDosis, setOrganosDosis] = useState({ vejiga: '', recto: '', sigma: '', utero: '', ganglios: '' });
+  const [organosDosis, setOrganosDosis] = useState({ vejiga: '', recto: '', sigma: '' });
+  const [ptvDosis, setPtvDosis] = useState({});
   const [braquiDatos, setBraquiDatos] = useState(null);
   const [printTrigger, setPrintTrigger] = useState(false);
 
@@ -454,26 +455,20 @@ const BraquiApp = () => {
   // Columnas: "Dosis [cGy]  Dosis relativa [%]  Proporción de volumen de estructura total [%]"
   // D1% = dosis donde el volumen acumulado cae a ≤ 1% (interpolación lineal)
   const parsearDVH = (texto) => {
-    const resultado = { vejiga: '', recto: '', sigma: '', utero: '', ganglios: '' };
+    const oar = { vejiga: '', recto: '', sigma: '' };
+    const ptv = {}; // { 'PTV_utero': valor, 'PTV gp': valor, ... }
     const bloques = texto.split(/Estructura:\s*/);
     for (const bloque of bloques) {
-      const nombreLinea = bloque.split('\n')[0].trim().replace('\r','').toLowerCase();
+      const nombreOriginal = bloque.split('\n')[0].trim().replace('\r', '');
+      const nombre = nombreOriginal.toLowerCase();
       let clave = null;
-      let umbral = 1.0; // D1% para OARs
-      if      (nombreLinea.includes('rectum')  || nombreLinea.includes('recto'))   clave = 'recto';
-      else if (nombreLinea.includes('bladder') || nombreLinea.includes('vejiga'))  clave = 'vejiga';
-      else if (nombreLinea.includes('sigma')   || nombreLinea.includes('sigmoid')) clave = 'sigma';
-      else if (
-        nombreLinea.includes('utero') || nombreLinea.includes('uterus') ||
-        nombreLinea.includes('hr-ctv') || nombreLinea.includes('hrctv') || nombreLinea.includes('hr_ctv') ||
-        nombreLinea.includes('ctv_t') || nombreLinea.includes('ctv-t') ||
-        (nombreLinea.includes('ctv') && !nombreLinea.includes('_n') && !nombreLinea.includes('-n') && !nombreLinea.includes('node'))
-      ) { clave = 'utero'; umbral = 90.0; } // D90%
-      else if (
-        nombreLinea.includes('ganglio') || nombreLinea.includes('nodes') || nombreLinea.includes('node') ||
-        nombreLinea.includes('lnn') || nombreLinea.includes('ctv_n') || nombreLinea.includes('ctv-n') ||
-        nombreLinea.includes('ptv_n') || nombreLinea.includes('paraort') || nombreLinea.includes('paraaort')
-      ) { clave = 'ganglios'; umbral = 90.0; } // D90%
+      let umbral = 1.0;
+      let esPTV = false;
+
+      if      (nombre.includes('rectum')  || nombre.includes('recto'))   clave = 'recto';
+      else if (nombre.includes('bladder') || nombre.includes('vejiga'))  clave = 'vejiga';
+      else if (nombre.includes('sigma')   || nombre.includes('sigmoid')) clave = 'sigma';
+      else if (nombre.startsWith('ptv')) { esPTV = true; umbral = 90.0; } // cualquier PTV → D90%
       else continue;
 
       // Extraer filas numéricas — 2 col (dosis, vol%) o 3 col (dosis, dosis_rel, vol%)
@@ -486,26 +481,26 @@ const BraquiApp = () => {
           if (!isNaN(dosis) && !isNaN(vol)) datos.push([dosis, vol]);
         }
       }
-      // Buscar cruce con el umbral — interpolación lineal
+      // Interpolación lineal al umbral (D1% para OARs, D90% para PTVs)
+      let valor = '';
       for (let i = 0; i < datos.length; i++) {
         const [dosis, vol] = datos[i];
         if (vol <= umbral) {
-          let d;
           if (i > 0) {
             const [d0, v0] = datos[i - 1];
-            d = d0 + (umbral - v0) * (dosis - d0) / (vol - v0);
+            valor = Math.round((d0 + (umbral - v0) * (dosis - d0) / (vol - v0)) * 10) / 10;
           } else {
-            d = dosis;
+            valor = dosis;
           }
-          resultado[clave] = Math.round(d * 10) / 10;
           break;
         }
       }
-      if (!resultado[clave] && datos.length > 0) {
-        resultado[clave] = datos[datos.length - 1][0];
-      }
+      if (valor === '' && datos.length > 0) valor = datos[datos.length - 1][0];
+
+      if (esPTV) ptv[nombreOriginal] = valor;
+      else oar[clave] = valor;
     }
-    return resultado;
+    return { ...oar, ptv };
   };
 
   // parsearEclipse movido al backend → endpoint /procesar-eclipse
@@ -516,8 +511,9 @@ const BraquiApp = () => {
     setDvhStatus('loading');
     try {
       const texto = await archivo.text();
-      const datos = parsearDVH(texto);
-      setOrganosDosis(datos);
+      const { ptv, ...oar } = parsearDVH(texto);
+      setOrganosDosis(oar);
+      setPtvDosis(ptv);
       setDvhStatus('ok');
     } catch {
       setDvhStatus('error');
@@ -551,7 +547,7 @@ const BraquiApp = () => {
     setGuardadoStatus('saving');
     const dosisOrganos = {
       vejiga_ext: organosDosis.vejiga, recto_ext: organosDosis.recto, sigma_ext: organosDosis.sigma,
-      utero_ext: organosDosis.utero, ganglios_ext: organosDosis.ganglios,
+      ptv_ext: ptvDosis,
       vejiga_braqui: braquiDatos?.vejiga || '', recto_braqui: braquiDatos?.recto || '',
       sigma_braqui: braquiDatos?.sigma || '',
       ad: braquiDatos?.ad || '', ai: braquiDatos?.ai || '',
@@ -599,7 +595,8 @@ const BraquiApp = () => {
     setPlanEditandoId(null);
     setDvhStatus(null);
     setEclipseStatus(null);
-    setOrganosDosis({ vejiga: '', recto: '', sigma: '', utero: '', ganglios: '' });
+    setOrganosDosis({ vejiga: '', recto: '', sigma: '' });
+    setPtvDosis({});
     setBraquiDatos(null);
     setSlotActivo(null);
     setMedicoSelId('');
@@ -637,9 +634,8 @@ const BraquiApp = () => {
       vejiga: plan.dosis_organos?.vejiga_ext || '',
       recto: plan.dosis_organos?.recto_ext || '',
       sigma: plan.dosis_organos?.sigma_ext || '',
-      utero: plan.dosis_organos?.utero_ext || '',
-      ganglios: plan.dosis_organos?.ganglios_ext || '',
     });
+    setPtvDosis(plan.dosis_organos?.ptv_ext || {});
     const doa = plan.dosis_organos || {};
     setBraquiDatos(
       (doa.vejiga_braqui || doa.ad || doa.actividades)
@@ -687,9 +683,8 @@ const BraquiApp = () => {
       vejiga: plan.dosis_organos?.vejiga_ext || '',
       recto: plan.dosis_organos?.recto_ext || '',
       sigma: plan.dosis_organos?.sigma_ext || '',
-      utero: plan.dosis_organos?.utero_ext || '',
-      ganglios: plan.dosis_organos?.ganglios_ext || '',
     });
+    setPtvDosis(plan.dosis_organos?.ptv_ext || {});
     const doa = plan.dosis_organos || {};
     setBraquiDatos(
       (doa.vejiga_braqui || doa.ad || doa.actividades)
@@ -1105,9 +1100,8 @@ const BraquiApp = () => {
                               `Vejiga: ${organosDosis.vejiga || '—'} cGy`,
                               `Recto: ${organosDosis.recto || '—'} cGy`,
                               `Sigma: ${organosDosis.sigma || '—'} cGy`,
-                              organosDosis.utero    ? `Útero D90%: ${organosDosis.utero} cGy` : null,
-                              organosDosis.ganglios ? `Ganglios D90%: ${organosDosis.ganglios} cGy` : null,
-                            ].filter(Boolean).join(' · ')
+                              ...Object.entries(ptvDosis).map(([n, v]) => `${n} D90%: ${v} cGy`),
+                            ].join(' · ')
                           : dvhStatus === 'error' ? 'Error al leer el archivo — verificar formato'
                           : 'Archivo .txt exportado desde el planificador'}
                       </p>
@@ -1503,28 +1497,22 @@ const BraquiApp = () => {
                       </tr>
                     );
                   })}
-                  {/* Filas PTV — solo si hay datos del DVH externo */}
-                  {[
-                    { label: 'Útero / CTV-T', key: 'utero' },
-                    { label: 'Ganglios',       key: 'ganglios' },
-                  ].filter(({ key }) => organosDosis[key]).map(({ label, key }, i) => {
-                    const dosisExt = String(organosDosis[key]);
-                    return (
-                      <tr key={key} style={{ background: i % 2 === 0 ? '#f0fdf4' : '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTop: i === 0 ? '2px solid #94a3b8' : undefined }}>
-                        <td style={{ padding: '8px 10px', fontWeight: '700', fontStyle: 'italic' }}>
-                          {label}
-                          <span style={{ fontSize: '6pt', color: '#64748b', fontWeight: '400', marginLeft: '4px' }}>D90%</span>
-                        </td>
-                        <td style={{ padding: '8px 10px', textAlign: 'center', color: '#0f172a', fontWeight: '700' }}>
-                          {dosisExt} cGy
-                        </td>
-                        <td style={{ padding: '8px 10px', textAlign: 'center', color: '#94a3b8' }}>—</td>
-                        <td style={{ padding: '8px 10px', textAlign: 'center', color: '#0f172a', fontWeight: '700' }}>
-                          {dosisExt} cGy
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {/* Filas PTV — dinámicas según lo que haya en el DVH */}
+                  {Object.entries(ptvDosis).map(([nombre, valor], i) => (
+                    <tr key={nombre} style={{ background: i % 2 === 0 ? '#f0fdf4' : '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTop: i === 0 ? '2px solid #94a3b8' : undefined }}>
+                      <td style={{ padding: '8px 10px', fontWeight: '700', fontStyle: 'italic' }}>
+                        {nombre}
+                        <span style={{ fontSize: '6pt', color: '#64748b', fontWeight: '400', marginLeft: '4px' }}>D90%</span>
+                      </td>
+                      <td style={{ padding: '8px 10px', textAlign: 'center', color: '#0f172a', fontWeight: '700' }}>
+                        {valor} cGy
+                      </td>
+                      <td style={{ padding: '8px 10px', textAlign: 'center', color: '#94a3b8' }}>—</td>
+                      <td style={{ padding: '8px 10px', textAlign: 'center', color: '#0f172a', fontWeight: '700' }}>
+                        {valor} cGy
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
