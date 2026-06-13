@@ -1462,16 +1462,16 @@ const BraquiApp = () => {
           <div className="bloque-pdf hoja-impresion">
 
             {/* Encabezado */}
-            <div style={{ borderBottom: '2px solid #0f172a', paddingBottom: '8px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <div style={{ borderBottom: '2px solid #0f172a', paddingBottom: '5px', marginBottom: '7px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
               <LogoEmpresa />
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <div style={{ fontSize: '13pt', fontWeight: '900', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1 }}>Prescripción Médica</div>
-                <div style={{ fontSize: '7pt', color: '#94a3b8', marginTop: '3px' }}>Braquiterapia Ginecológica · LDR &nbsp;|&nbsp; {fechaImpresion}</div>
+                <div style={{ fontSize: '7pt', color: '#94a3b8', marginTop: '2px' }}>Braquiterapia Ginecológica · LDR &nbsp;|&nbsp; {fechaImpresion}</div>
               </div>
             </div>
 
             {/* Datos filiatorios */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '9px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '6px' }}>
               <tbody>
                 <tr>
                   <td style={{ width: '60%', padding: '6px 10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', verticalAlign: 'top' }}>
@@ -1492,7 +1492,7 @@ const BraquiApp = () => {
             </table>
 
             {/* Tratamiento y fuentes */}
-            <div style={{ background: '#0f172a', color: 'white', borderRadius: '8px', padding: '10px 14px', marginBottom: '9px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ background: '#0f172a', color: 'white', borderRadius: '8px', padding: '7px 14px', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontSize: '6.5pt', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Tratamiento</div>
                 <div style={{ fontSize: '13pt', fontWeight: '900' }}>
@@ -1508,16 +1508,16 @@ const BraquiApp = () => {
             </div>
 
             {/* Tabla fuentes */}
-            <div style={{ marginBottom: '9px' }}>
-              <div style={{ fontSize: '7pt', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '6px', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px' }}>
+            <div style={{ marginBottom: '6px' }}>
+              <div style={{ fontSize: '7pt', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '3px', borderBottom: '1px solid #e2e8f0', paddingBottom: '3px' }}>
                 Fuentes Utilizadas — Cs-137
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9pt' }}>
                 <thead>
                   <tr style={{ background: '#1e293b', color: 'white' }}>
-                    <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>Posición</th>
-                    <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>N° Serie</th>
-                    <th style={{ padding: '6px 10px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>Tipo</th>
+                    <th style={{ padding: '4px 8px', textAlign: 'left', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>Posición</th>
+                    <th style={{ padding: '4px 8px', textAlign: 'left', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>N° Serie</th>
+                    <th style={{ padding: '4px 8px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>Tipo</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1526,9 +1526,9 @@ const BraquiApp = () => {
                     const posLabel = pos.toUpperCase();
                     return (
                       <tr key={pos} style={{ background: i % 2 === 0 ? '#f8fafc' : 'white', borderBottom: '1px solid #e2e8f0' }}>
-                        <td style={{ padding: '6px 10px', fontWeight: '700' }}>{posLabel}</td>
-                        <td style={{ padding: '6px 10px', fontFamily: 'monospace', fontSize: '10pt', fontWeight: '700' }}>{data.id}</td>
-                        <td style={{ padding: '6px 10px', textAlign: 'center', fontSize: '8pt', color: '#64748b' }}>Amersham {tipoFuente}</td>
+                        <td style={{ padding: '4px 8px', fontWeight: '700' }}>{posLabel}</td>
+                        <td style={{ padding: '4px 8px', fontFamily: 'monospace', fontSize: '10pt', fontWeight: '700' }}>{data.id}</td>
+                        <td style={{ padding: '4px 8px', textAlign: 'center', fontSize: '8pt', color: '#64748b' }}>Amersham {tipoFuente}</td>
                       </tr>
                     );
                   })}
@@ -1537,17 +1537,17 @@ const BraquiApp = () => {
             </div>
 
             {/* Tabla órganos a riesgo */}
-            <div style={{ marginBottom: '9px' }}>
-              <div style={{ fontSize: '7pt', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '6px', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px' }}>
+            <div style={{ marginBottom: '6px' }}>
+              <div style={{ fontSize: '7pt', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '3px', borderBottom: '1px solid #e2e8f0', paddingBottom: '3px' }}>
                 Órganos a Riesgo
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9pt' }}>
                 <thead>
                   <tr style={{ background: '#1e293b', color: 'white' }}>
-                    <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: '7pt', textTransform: 'uppercase' }}>Órgano</th>
-                    <th style={{ padding: '6px 10px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase' }}>Dosis RT Externa</th>
-                    <th style={{ padding: '6px 10px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase' }}>Dosis Braquiterapia</th>
-                    <th style={{ padding: '6px 10px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase' }}>Dosis Total</th>
+                    <th style={{ padding: '4px 8px', textAlign: 'left', fontSize: '7pt', textTransform: 'uppercase' }}>Órgano</th>
+                    <th style={{ padding: '4px 8px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase' }}>Dosis RT Externa</th>
+                    <th style={{ padding: '4px 8px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase' }}>Dosis Braquiterapia</th>
+                    <th style={{ padding: '4px 8px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase' }}>Dosis Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1563,14 +1563,14 @@ const BraquiApp = () => {
                       : '';
                     return (
                       <tr key={label} style={{ background: i % 2 === 0 ? '#f8fafc' : 'white', borderBottom: '1px solid #e2e8f0' }}>
-                        <td style={{ padding: '8px 10px', fontWeight: '700', fontStyle: 'italic' }}>{label}</td>
-                        <td style={{ padding: '8px 10px', textAlign: 'center', color: dosisExt ? '#0f172a' : '#94a3b8', fontWeight: dosisExt ? '700' : '400' }}>
+                        <td style={{ padding: '5px 8px', fontWeight: '700', fontStyle: 'italic' }}>{label}</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'center', color: dosisExt ? '#0f172a' : '#94a3b8', fontWeight: dosisExt ? '700' : '400' }}>
                           {dosisExt ? `${dosisExt} cGy` : '_________ cGy'}
                         </td>
-                        <td style={{ padding: '8px 10px', textAlign: 'center', color: dosisBraqui ? '#0f172a' : '#94a3b8', fontWeight: dosisBraqui ? '700' : '400' }}>
+                        <td style={{ padding: '5px 8px', textAlign: 'center', color: dosisBraqui ? '#0f172a' : '#94a3b8', fontWeight: dosisBraqui ? '700' : '400' }}>
                           {dosisBraqui ? `${dosisBraqui} cGy` : '_________ cGy'}
                         </td>
-                        <td style={{ padding: '8px 10px', textAlign: 'center', color: dosisTotal ? '#0f172a' : '#94a3b8', fontWeight: '700' }}>
+                        <td style={{ padding: '5px 8px', textAlign: 'center', color: dosisTotal ? '#0f172a' : '#94a3b8', fontWeight: '700' }}>
                           {dosisTotal || '_______'}
                         </td>
                       </tr>
@@ -1579,15 +1579,15 @@ const BraquiApp = () => {
                   {/* Filas PTV — dinámicas según lo que haya en el DVH */}
                   {Object.entries(ptvDosis).map(([nombre, valor], i) => (
                     <tr key={nombre} style={{ background: i % 2 === 0 ? '#f0fdf4' : '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTop: i === 0 ? '2px solid #94a3b8' : undefined }}>
-                      <td style={{ padding: '8px 10px', fontWeight: '700', fontStyle: 'italic' }}>
+                      <td style={{ padding: '5px 8px', fontWeight: '700', fontStyle: 'italic' }}>
                         {nombre}
                         <span style={{ fontSize: '6pt', color: '#64748b', fontWeight: '400', marginLeft: '4px' }}>D90%</span>
                       </td>
-                      <td style={{ padding: '8px 10px', textAlign: 'center', color: '#0f172a', fontWeight: '700' }}>
+                      <td style={{ padding: '5px 8px', textAlign: 'center', color: '#0f172a', fontWeight: '700' }}>
                         {valor} cGy
                       </td>
-                      <td style={{ padding: '8px 10px', textAlign: 'center', color: '#94a3b8' }}>—</td>
-                      <td style={{ padding: '8px 10px', textAlign: 'center', color: '#0f172a', fontWeight: '700' }}>
+                      <td style={{ padding: '5px 8px', textAlign: 'center', color: '#94a3b8' }}>—</td>
+                      <td style={{ padding: '5px 8px', textAlign: 'center', color: '#0f172a', fontWeight: '700' }}>
                         {valor} cGy
                       </td>
                     </tr>
@@ -1597,8 +1597,8 @@ const BraquiApp = () => {
             </div>
 
             {/* Tabla EQD2 */}
-            <div style={{ marginBottom: '9px' }}>
-              <div style={{ fontSize: '7pt', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '4px', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <div style={{ marginBottom: '6px' }}>
+              <div style={{ fontSize: '7pt', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '3px', borderBottom: '1px solid #e2e8f0', paddingBottom: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span>Dosis Equivalente 2 Gy — EQD₂</span>
                 <span style={{ fontSize: '6pt', fontWeight: '400', color: '#94a3b8', textTransform: 'none', letterSpacing: '0' }}>
                   α/β: OAR = {paramsRB.alfaBeta.vejiga} Gy · PTV = {paramsRB.alfaBeta.ptv} Gy · d = {paramsRB.dPorFraccion} Gy/fx · T½ = {T_MEDIO_H} h
@@ -1625,10 +1625,10 @@ const BraquiApp = () => {
                     const fmt = v => v != null ? `${v} Gy` : '—';
                     return (
                       <tr key={key} style={{ background: i % 2 === 0 ? '#f5f3ff' : 'white', borderBottom: '1px solid #e2e8f0' }}>
-                        <td style={{ padding: '7px 10px', fontWeight: '700', fontStyle: 'italic' }}>{label}</td>
-                        <td style={{ padding: '7px 10px', textAlign: 'center', color: q2e != null ? '#0f172a' : '#94a3b8', fontWeight: q2e != null ? '700' : '400' }}>{fmt(q2e)}</td>
-                        <td style={{ padding: '7px 10px', textAlign: 'center', color: q2b != null ? '#0f172a' : '#94a3b8', fontWeight: q2b != null ? '700' : '400' }}>{fmt(q2b)}</td>
-                        <td style={{ padding: '7px 10px', textAlign: 'center', fontWeight: q2t != null ? '900' : '400', color: q2t != null ? '#4c1d95' : '#94a3b8' }}>{fmt(q2t)}</td>
+                        <td style={{ padding: '5px 8px', fontWeight: '700', fontStyle: 'italic' }}>{label}</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'center', color: q2e != null ? '#0f172a' : '#94a3b8', fontWeight: q2e != null ? '700' : '400' }}>{fmt(q2e)}</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'center', color: q2b != null ? '#0f172a' : '#94a3b8', fontWeight: q2b != null ? '700' : '400' }}>{fmt(q2b)}</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'center', fontWeight: q2t != null ? '900' : '400', color: q2t != null ? '#4c1d95' : '#94a3b8' }}>{fmt(q2t)}</td>
                       </tr>
                     );
                   })}
@@ -1637,12 +1637,12 @@ const BraquiApp = () => {
                     const fmt = v => v != null ? `${v} Gy` : '—';
                     return (
                       <tr key={nombre} style={{ background: i % 2 === 0 ? '#f0fdf4' : '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTop: i === 0 ? '2px solid #94a3b8' : undefined }}>
-                        <td style={{ padding: '7px 10px', fontWeight: '700', fontStyle: 'italic' }}>
+                        <td style={{ padding: '5px 8px', fontWeight: '700', fontStyle: 'italic' }}>
                           {nombre} <span style={{ fontSize: '6pt', color: '#64748b', fontWeight: '400' }}>D₉₀%</span>
                         </td>
-                        <td style={{ padding: '7px 10px', textAlign: 'center', fontWeight: '700', color: '#0f172a' }}>{fmt(q2e)}</td>
-                        <td style={{ padding: '7px 10px', textAlign: 'center', color: '#94a3b8' }}>—</td>
-                        <td style={{ padding: '7px 10px', textAlign: 'center', fontWeight: '900', color: '#4c1d95' }}>{fmt(q2e)}</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'center', fontWeight: '700', color: '#0f172a' }}>{fmt(q2e)}</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'center', color: '#94a3b8' }}>—</td>
+                        <td style={{ padding: '5px 8px', textAlign: 'center', fontWeight: '900', color: '#4c1d95' }}>{fmt(q2e)}</td>
                       </tr>
                     );
                   })}
@@ -1663,14 +1663,14 @@ const BraquiApp = () => {
             )}
 
             {/* Firmas hoja 1 */}
-            <div style={{ marginTop: '40px', paddingTop: '0px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '50px' }}>
+            <div style={{ marginTop: '18px', paddingTop: '0px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '50px' }}>
               {[
                 { nombre: `Dr. ${formData.medico_responsable || ''}`, rol: 'Firma y Sello — Médico Responsable' },
                 { nombre: formData.fisico_medico || '', rol: 'Firma — Físico Responsable' },
               ].map(({ nombre, rol }) => (
                 <div key={rol} style={{ textAlign: 'center' }}>
                   {/* Espacio en blanco para la firma manuscrita */}
-                  <div style={{ height: '38px' }} />
+                  <div style={{ height: '22px' }} />
                   <div style={{ borderTop: '1px solid #0f172a', paddingTop: '6px' }}>
                     <div style={{ fontWeight: '900', textTransform: 'uppercase', fontSize: '8.5pt', letterSpacing: '0.5px' }}>{nombre}</div>
                     <div style={{ fontSize: '6.5pt', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>{rol}</div>
