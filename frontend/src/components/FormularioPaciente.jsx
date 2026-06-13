@@ -1255,9 +1255,9 @@ const BraquiApp = () => {
                         <div className="w-full border-t border-dashed border-slate-300 my-1" />
                         {/* Ovoides (izq y der) */}
                         <div className="flex justify-center gap-3 w-full">
-                          <div className="w-28"><Slot id="f4" label="Ovoide I" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
+                          <div className="w-28"><Slot id="f4" label="Ovoide D" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
                           <div className="w-28 invisible" />
-                          <div className="w-28"><Slot id="f5" label="Ovoide D" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
+                          <div className="w-28"><Slot id="f5" label="Ovoide I" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
                         </div>
                       </div>
                     ) : (
