@@ -354,6 +354,7 @@ const BraquiApp = () => {
   const [medicoSelId, setMedicoSelId] = useState('');
   const [fisicoSelId, setFisicoSelId] = useState('');
   const [pacienteDbId, setPacienteDbId] = useState(null);
+  const [planEditandoId, setPlanEditandoId] = useState(null);
   const [guardadoStatus, setGuardadoStatus] = useState(null); // null | 'saving' | 'ok' | 'error'
   const [imagenCarta, setImagenCarta] = useState(null);      // base64 de la imagen de curvas
 
@@ -538,35 +539,40 @@ const BraquiApp = () => {
 
   const guardarEnDB = async (resultadoData) => {
     setGuardadoStatus('saving');
+    const dosisOrganos = {
+      vejiga_ext: organosDosis.vejiga, recto_ext: organosDosis.recto, sigma_ext: organosDosis.sigma,
+      vejiga_braqui: braquiDatos?.vejiga || '', recto_braqui: braquiDatos?.recto || '',
+      sigma_braqui: braquiDatos?.sigma || '',
+      ad: braquiDatos?.ad || '', ai: braquiDatos?.ai || '',
+      bd: braquiDatos?.bd || '', bi: braquiDatos?.bi || '',
+      actividades: braquiDatos?.actividades || null,
+      imagen_carta: imagenCarta || null,
+    };
+    const planPayload = {
+      medico_id: parseInt(medicoSelId) || 1,
+      fisico_id: parseInt(fisicoSelId) || 5,
+      fecha_colocacion: formData.fecha_colocacion.substring(0, 16).replace("T", " "),
+      tiempo_horas: formData.tiempo_tratamiento_horas,
+      dosis_prescripta: formData.dosis_prescripta_braqui,
+      aplicador: formData.aplicador,
+      fecha_extraccion: resultadoData.fecha_extraccion || '',
+      asignacion_fuentes: resultadoData.asignacion || {},
+      dosis_organos: dosisOrganos,
+    };
     try {
-      const pRes = await api.post('/pacientes', {
-        nombre: formData.nombre_paciente,
-        dni: formData.id_paciente,
-        historia_clinica: formData.historia_clinica,
-        diagnostico: formData.diagnostico,
-      });
-      const pid = pRes.data.id;
-      setPacienteDbId(pid);
-      await api.post('/planes', {
-        paciente_id: pid,
-        medico_id: parseInt(medicoSelId) || 1,
-        fisico_id: parseInt(fisicoSelId) || 5,
-        fecha_colocacion: formData.fecha_colocacion.substring(0, 16).replace("T", " "),
-        tiempo_horas: formData.tiempo_tratamiento_horas,
-        dosis_prescripta: formData.dosis_prescripta_braqui,
-        aplicador: formData.aplicador,
-        fecha_extraccion: resultadoData.fecha_extraccion || '',
-        asignacion_fuentes: resultadoData.asignacion || {},
-        dosis_organos: {
-          vejiga_ext: organosDosis.vejiga, recto_ext: organosDosis.recto, sigma_ext: organosDosis.sigma,
-          vejiga_braqui: braquiDatos?.vejiga || '', recto_braqui: braquiDatos?.recto || '',
-          sigma_braqui: braquiDatos?.sigma || '',
-          ad: braquiDatos?.ad || '', ai: braquiDatos?.ai || '',
-          bd: braquiDatos?.bd || '', bi: braquiDatos?.bi || '',
-          actividades: braquiDatos?.actividades || null,
-          imagen_carta: imagenCarta || null,
-        },
-      });
+      if (planEditandoId) {
+        await api.put(`/planes/${planEditandoId}`, planPayload);
+      } else {
+        const pRes = await api.post('/pacientes', {
+          nombre: formData.nombre_paciente,
+          dni: formData.id_paciente,
+          historia_clinica: formData.historia_clinica,
+          diagnostico: formData.diagnostico,
+        });
+        const pid = pRes.data.id;
+        setPacienteDbId(pid);
+        await api.post('/planes', { paciente_id: pid, ...planPayload });
+      }
       setGuardadoStatus('ok');
     } catch (err) {
       console.error('Error guardando:', err);
@@ -579,6 +585,7 @@ const BraquiApp = () => {
     setStep(0);
     setGuardadoStatus(null);
     setPacienteDbId(null);
+    setPlanEditandoId(null);
     setDvhStatus(null);
     setEclipseStatus(null);
     setOrganosDosis({ vejiga: '', recto: '', sigma: '' });
@@ -637,6 +644,57 @@ const BraquiApp = () => {
     setPrintTrigger(true);
   };
 
+  const editarPlan = (plan, paciente) => {
+    const posiciones = { f1: null, f2: null, f3: null, f4: null, f5: null };
+    Object.entries(plan.asignacion_fuentes || {}).forEach(([pos, data]) => {
+      posiciones[pos] = data.id;
+    });
+    setFormData(prev => ({
+      ...prev,
+      nombre_paciente: paciente.nombre,
+      id_paciente: paciente.dni,
+      historia_clinica: paciente.historia_clinica,
+      diagnostico: paciente.diagnostico,
+      medico_responsable: (plan.medico || '').replace(/^Dr\.\s*/i, ''),
+      fisico_medico: plan.fisico,
+      aplicador: plan.aplicador,
+      fecha_colocacion: plan.fecha_colocacion.replace(' ', 'T'),
+      tiempo_tratamiento_horas: plan.tiempo_horas || 48,
+      dosis_prescripta_braqui: plan.dosis_prescripta,
+      posiciones,
+      ids_fuentes: Object.values(posiciones).filter(Boolean),
+    }));
+    setMedicoSelId(String(plan.medico_id || ''));
+    setFisicoSelId(String(plan.fisico_id || ''));
+    setPacienteDbId(paciente.id);
+    setPlanEditandoId(plan.id);
+    setResultado(null);
+    setGuardadoStatus(null);
+    setOrganosDosis({
+      vejiga: plan.dosis_organos?.vejiga_ext || '',
+      recto: plan.dosis_organos?.recto_ext || '',
+      sigma: plan.dosis_organos?.sigma_ext || '',
+    });
+    const doa = plan.dosis_organos || {};
+    setBraquiDatos(
+      (doa.vejiga_braqui || doa.ad || doa.actividades)
+        ? {
+            vejiga: doa.vejiga_braqui || '',
+            recto: doa.recto_braqui || '',
+            sigma: doa.sigma_braqui || '',
+            ad: doa.ad || '', ai: doa.ai || '',
+            bd: doa.bd || '', bi: doa.bi || '',
+            actividades: doa.actividades || null,
+          }
+        : null
+    );
+    setImagenCarta(doa.imagen_carta || null);
+    setHistorialPaciente(null);
+    setHistorialQuery('');
+    setHistorialResultados([]);
+    setStep(1);
+  };
+
   const enviarFinal = async () => {
     try {
       const fechaLimpia = formData.fecha_colocacion.substring(0, 16).replace("T", " ");
@@ -679,7 +737,10 @@ const BraquiApp = () => {
           {/* HEADER */}
           <div className="bg-slate-900 p-8 flex justify-between items-center">
             <LogoEmpresa dark={true} />
-            <span className="text-emerald-400 text-xs font-bold uppercase tracking-widest italic">● Sesión Activa</span>
+            {planEditandoId
+              ? <span className="text-amber-400 text-xs font-bold uppercase tracking-widest italic">● Editando Plan</span>
+              : <span className="text-emerald-400 text-xs font-bold uppercase tracking-widest italic">● Sesión Activa</span>
+            }
           </div>
 
           <div className="p-10">
@@ -819,6 +880,15 @@ const BraquiApp = () => {
                                 </div>
                                 <div className="flex items-center gap-3">
                                   <span className="text-sm font-black text-blue-600">{plan.dosis_prescripta} cGy</span>
+                                  {/* Botón editar — aparece al hover */}
+                                  <button
+                                    onClick={() => editarPlan(plan, historialPaciente.paciente)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-emerald-500 p-1 rounded-lg hover:bg-emerald-50"
+                                    title="Editar plan">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                    </svg>
+                                  </button>
                                   {/* Botón imprimir — aparece al hover */}
                                   <button
                                     onClick={() => imprimirPlanHistorial(plan, historialPaciente.paciente)}
@@ -1255,13 +1325,13 @@ const BraquiApp = () => {
                               ? 'bg-slate-700 text-slate-400 cursor-wait'
                               : 'bg-slate-700 hover:bg-slate-600 text-white'}`}>
                           {guardadoStatus === 'ok' ? (
-                            <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Guardado</>
+                            <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>{planEditandoId ? 'Actualizado' : 'Guardado'}</>
                           ) : guardadoStatus === 'saving' ? (
-                            <>Guardando...</>
+                            <>{planEditandoId ? 'Actualizando...' : 'Guardando...'}</>
                           ) : guardadoStatus === 'error' ? (
                             <>Error — Reintentar</>
                           ) : (
-                            <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Guardar</>
+                            <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>{planEditandoId ? 'Actualizar Plan' : 'Guardar'}</>
                           )}
                         </button>
 

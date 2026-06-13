@@ -56,6 +56,17 @@ class PlanCreate(BaseModel):
     asignacion_fuentes: dict = {}
     dosis_organos: dict = {}
 
+class PlanUpdate(BaseModel):
+    medico_id: int
+    fisico_id: int
+    fecha_colocacion: str
+    tiempo_horas: float
+    dosis_prescripta: float
+    aplicador: str
+    fecha_extraccion: str = ""
+    asignacion_fuentes: dict = {}
+    dosis_organos: dict = {}
+
 # ── FUENTES Y PLAN ────────────────────────────────────────────────────────────
 @app.get("/fuentes")
 def listar_fuentes():
@@ -156,7 +167,9 @@ def historial_paciente(paciente_id: int, db: Session = Depends(get_db)):
         "dosis_prescripta":  pl.dosis_prescripta,
         "tiempo_horas":      pl.tiempo_horas,
         "medico":            f"Dr. {pl.medico.nombre} {pl.medico.apellido}",
+        "medico_id":         pl.medico_id,
         "fisico":            f"{pl.fisico.nombre} {pl.fisico.apellido}",
+        "fisico_id":         pl.fisico_id,
         "asignacion_fuentes": json.loads(pl.asignacion_fuentes),
         "dosis_organos":      json.loads(pl.dosis_organos),
         "fecha_creacion":    pl.fecha_creacion.isoformat() if pl.fecha_creacion else "",
@@ -184,6 +197,23 @@ def guardar_plan(data: PlanCreate, db: Session = Depends(get_db)):
     )
     db.add(plan); db.commit(); db.refresh(plan)
     return {"id": plan.id, "status": "saved"}
+
+@app.put("/planes/{plan_id}")
+def actualizar_plan(plan_id: int, data: PlanUpdate, db: Session = Depends(get_db)):
+    plan = db.query(Plan).filter(Plan.id == plan_id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan no encontrado")
+    plan.medico_id         = data.medico_id
+    plan.fisico_id         = data.fisico_id
+    plan.fecha_colocacion  = data.fecha_colocacion
+    plan.tiempo_horas      = data.tiempo_horas
+    plan.dosis_prescripta  = data.dosis_prescripta
+    plan.aplicador         = data.aplicador
+    plan.fecha_extraccion  = data.fecha_extraccion
+    plan.asignacion_fuentes = json.dumps(data.asignacion_fuentes)
+    plan.dosis_organos      = json.dumps(data.dosis_organos)
+    db.commit(); db.refresh(plan)
+    return {"id": plan.id, "status": "updated"}
 
 @app.delete("/planes/{plan_id}")
 def eliminar_plan(plan_id: int, db: Session = Depends(get_db)):
