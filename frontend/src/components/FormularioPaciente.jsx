@@ -369,6 +369,10 @@ const BraquiApp = () => {
   const [eclipseStatus, setEclipseStatus] = useState(null);
   const [organosDosis, setOrganosDosis] = useState({ vejiga: '', recto: '', sigma: '' });
   const [ptvDosis, setPtvDosis] = useState({});
+  const [paramsRB, setParamsRB] = useState({
+    dPorFraccion: 1.8,       // Gy/fracción — RT externa
+    alfaBeta: { vejiga: 3, recto: 3, sigma: 3, ptv: 10 }, // Gy
+  });
   const [braquiDatos, setBraquiDatos] = useState(null);
   const [printTrigger, setPrintTrigger] = useState(false);
 
@@ -503,6 +507,30 @@ const BraquiApp = () => {
     return { ...oar, ptv };
   };
 
+  // ── EQD2 ──────────────────────────────────────────────────────────────────
+  // Dale RG, Br J Radiol 1985 | GEC-ESTRO (Pötter et al., Radiother Oncol 2011) | ICRU 89 (2016)
+  const T_MEDIO_H = 1.5; // h — tiempo de reparación (GEC-ESTRO, tejidos tardíos y tumor)
+
+  const eqd2Ext = (D_cGy, ab_Gy, d_Gy) => {
+    const D = parseFloat(D_cGy) / 100;
+    const d = parseFloat(d_Gy);
+    const ab = parseFloat(ab_Gy);
+    if (!D || !d || !ab) return null;
+    return +(D * (d + ab) / (2 + ab)).toFixed(2); // Gy
+  };
+
+  const eqd2BraquiLDR = (D_cGy, T_h, ab_Gy) => {
+    const D = parseFloat(D_cGy) / 100;
+    const T = parseFloat(T_h);
+    const ab = parseFloat(ab_Gy);
+    if (!D || !T || !ab) return null;
+    const mu = Math.log(2) / T_MEDIO_H;           // h⁻¹ ≈ 0.462
+    const R  = D / T;                              // Gy/h (tasa de dosis media)
+    const g  = 1 - (1 - Math.exp(-mu * T)) / (mu * T); // factor Lea-Catcheside
+    const BED = D * (1 + (R / (mu * ab)) * g);
+    return +(BED / (1 + 2 / ab)).toFixed(2);       // Gy
+  };
+
   // parsearEclipse movido al backend → endpoint /procesar-eclipse
 
   const handleDVH = async (e) => {
@@ -548,6 +576,7 @@ const BraquiApp = () => {
     const dosisOrganos = {
       vejiga_ext: organosDosis.vejiga, recto_ext: organosDosis.recto, sigma_ext: organosDosis.sigma,
       ptv_ext: ptvDosis,
+      params_rb: paramsRB,
       vejiga_braqui: braquiDatos?.vejiga || '', recto_braqui: braquiDatos?.recto || '',
       sigma_braqui: braquiDatos?.sigma || '',
       ad: braquiDatos?.ad || '', ai: braquiDatos?.ai || '',
@@ -597,6 +626,7 @@ const BraquiApp = () => {
     setEclipseStatus(null);
     setOrganosDosis({ vejiga: '', recto: '', sigma: '' });
     setPtvDosis({});
+    setParamsRB({ dPorFraccion: 1.8, alfaBeta: { vejiga: 3, recto: 3, sigma: 3, ptv: 10 } });
     setBraquiDatos(null);
     setSlotActivo(null);
     setMedicoSelId('');
@@ -636,6 +666,7 @@ const BraquiApp = () => {
       sigma: plan.dosis_organos?.sigma_ext || '',
     });
     setPtvDosis(plan.dosis_organos?.ptv_ext || {});
+    if (plan.dosis_organos?.params_rb) setParamsRB(plan.dosis_organos.params_rb);
     const doa = plan.dosis_organos || {};
     setBraquiDatos(
       (doa.vejiga_braqui || doa.ad || doa.actividades)
@@ -685,6 +716,7 @@ const BraquiApp = () => {
       sigma: plan.dosis_organos?.sigma_ext || '',
     });
     setPtvDosis(plan.dosis_organos?.ptv_ext || {});
+    if (plan.dosis_organos?.params_rb) setParamsRB(plan.dosis_organos.params_rb);
     const doa = plan.dosis_organos || {};
     setBraquiDatos(
       (doa.vejiga_braqui || doa.ad || doa.actividades)
@@ -1135,6 +1167,53 @@ const BraquiApp = () => {
                   </label>
                 </div>
 
+                {/* ── Parámetros Radiobiológicos ── */}
+                <div className="border border-violet-100 bg-violet-50 rounded-3xl p-6 space-y-4">
+                  <div>
+                    <p className="text-[10px] font-black text-violet-500 uppercase tracking-widest mb-0.5">Parámetros Radiobiológicos — EQD2</p>
+                    <p className="text-[9px] text-slate-400">Dale 1985 · GEC-ESTRO (Pötter et al., Radiother Oncol 2011) · ICRU 89 (2016)</p>
+                  </div>
+
+                  {/* Dosis por fracción externa */}
+                  <div>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Dosis/fracción RT Externa (Gy)</label>
+                    <input
+                      type="number" step="0.1" min="0.5" max="5"
+                      value={paramsRB.dPorFraccion}
+                      onChange={e => setParamsRB(p => ({ ...p, dPorFraccion: parseFloat(e.target.value) || 1.8 }))}
+                      className="w-32 border-2 border-violet-200 p-3 rounded-xl bg-white font-bold text-violet-700 text-center outline-none focus:border-violet-400"
+                    />
+                    <span className="text-xs text-slate-400 ml-3">T½ reparación = 1.5 h (fijo)</span>
+                  </div>
+
+                  {/* α/β por estructura */}
+                  <div>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 block">Relaciones α/β (Gy)</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { key: 'vejiga', label: 'Vejiga' },
+                        { key: 'recto',  label: 'Recto'  },
+                        { key: 'sigma',  label: 'Sigma'  },
+                        { key: 'ptv',    label: 'PTV / Tumor' },
+                      ].map(({ key, label }) => (
+                        <div key={key} className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 border border-violet-100">
+                          <span className="text-xs font-bold text-slate-600 flex-1">{label}</span>
+                          <input
+                            type="number" step="0.5" min="1" max="20"
+                            value={paramsRB.alfaBeta[key]}
+                            onChange={e => setParamsRB(p => ({
+                              ...p,
+                              alfaBeta: { ...p.alfaBeta, [key]: parseFloat(e.target.value) || 3 }
+                            }))}
+                            className="w-16 border border-violet-200 rounded-lg p-1.5 text-center text-sm font-bold text-violet-700 outline-none focus:border-violet-400"
+                          />
+                          <span className="text-xs text-slate-400">Gy</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex gap-4">
                   <button onClick={() => setStep(1)} className="flex-1 bg-slate-100 py-6 rounded-3xl font-bold text-slate-400 uppercase text-[10px] tracking-widest">← Atrás</button>
                   <button onClick={() => setStep(3)} className="flex-[2] bg-blue-600 text-white py-6 rounded-3xl font-bold shadow-xl hover:bg-blue-700 transition-all">Mapa de Carga →</button>
@@ -1515,6 +1594,64 @@ const BraquiApp = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Tabla EQD2 */}
+            <div style={{ marginBottom: '9px' }}>
+              <div style={{ fontSize: '7pt', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '4px', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span>Dosis Equivalente 2 Gy — EQD₂</span>
+                <span style={{ fontSize: '6pt', fontWeight: '400', color: '#94a3b8', textTransform: 'none', letterSpacing: '0' }}>
+                  α/β: OAR = {paramsRB.alfaBeta.vejiga} Gy · PTV = {paramsRB.alfaBeta.ptv} Gy · d = {paramsRB.dPorFraccion} Gy/fx · T½ = {T_MEDIO_H} h
+                </span>
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9pt' }}>
+                <thead>
+                  <tr style={{ background: '#4c1d95', color: 'white' }}>
+                    <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>Estructura</th>
+                    <th style={{ padding: '6px 10px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>EQD₂ Externa (Gy)</th>
+                    <th style={{ padding: '6px 10px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>EQD₂ BQT LDR (Gy)</th>
+                    <th style={{ padding: '6px 10px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>EQD₂ Total (Gy)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { label: 'Vejiga', key: 'vejiga' },
+                    { label: 'Recto',  key: 'recto'  },
+                    { label: 'Sigma',  key: 'sigma'  },
+                  ].map(({ label, key }, i) => {
+                    const q2e = eqd2Ext(organosDosis[key], paramsRB.alfaBeta[key], paramsRB.dPorFraccion);
+                    const q2b = eqd2BraquiLDR(braquiDatos?.[key], formData.tiempo_tratamiento_horas, paramsRB.alfaBeta[key]);
+                    const q2t = (q2e != null || q2b != null) ? +((q2e || 0) + (q2b || 0)).toFixed(2) : null;
+                    const fmt = v => v != null ? `${v} Gy` : '—';
+                    return (
+                      <tr key={key} style={{ background: i % 2 === 0 ? '#f5f3ff' : 'white', borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={{ padding: '7px 10px', fontWeight: '700', fontStyle: 'italic' }}>{label}</td>
+                        <td style={{ padding: '7px 10px', textAlign: 'center', color: q2e != null ? '#0f172a' : '#94a3b8', fontWeight: q2e != null ? '700' : '400' }}>{fmt(q2e)}</td>
+                        <td style={{ padding: '7px 10px', textAlign: 'center', color: q2b != null ? '#0f172a' : '#94a3b8', fontWeight: q2b != null ? '700' : '400' }}>{fmt(q2b)}</td>
+                        <td style={{ padding: '7px 10px', textAlign: 'center', fontWeight: q2t != null ? '900' : '400', color: q2t != null ? '#4c1d95' : '#94a3b8' }}>{fmt(q2t)}</td>
+                      </tr>
+                    );
+                  })}
+                  {Object.entries(ptvDosis).map(([nombre, valor], i) => {
+                    const q2e = eqd2Ext(valor, paramsRB.alfaBeta.ptv, paramsRB.dPorFraccion);
+                    const fmt = v => v != null ? `${v} Gy` : '—';
+                    return (
+                      <tr key={nombre} style={{ background: i % 2 === 0 ? '#f0fdf4' : '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTop: i === 0 ? '2px solid #94a3b8' : undefined }}>
+                        <td style={{ padding: '7px 10px', fontWeight: '700', fontStyle: 'italic' }}>
+                          {nombre} <span style={{ fontSize: '6pt', color: '#64748b', fontWeight: '400' }}>D₉₀%</span>
+                        </td>
+                        <td style={{ padding: '7px 10px', textAlign: 'center', fontWeight: '700', color: '#0f172a' }}>{fmt(q2e)}</td>
+                        <td style={{ padding: '7px 10px', textAlign: 'center', color: '#94a3b8' }}>—</td>
+                        <td style={{ padding: '7px 10px', textAlign: 'center', fontWeight: '900', color: '#4c1d95' }}>{fmt(q2e)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <div style={{ fontSize: '6pt', color: '#94a3b8', marginTop: '4px', fontStyle: 'italic', lineHeight: '1.5' }}>
+                OARs: D₁% DVH (ext) + D₁% Eclipse (BQT). PTVs: D₉₀% DVH (solo ext). LDR: Dale RG, Br J Radiol 1985;58:515-28.
+                EQD₂ = BED/(1+2/αβ) · BED = D[1+(Ṙ/μαβ)·g] · g = Lea-Catcheside · GEC-ESTRO: Pötter et al., Radiother Oncol 2011 · ICRU 89 (2016)
+              </div>
             </div>
 
             {/* Comentarios */}
