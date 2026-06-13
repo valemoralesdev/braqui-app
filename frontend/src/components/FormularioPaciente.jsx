@@ -367,7 +367,7 @@ const BraquiApp = () => {
   // ── Archivos externos ──
   const [dvhStatus, setDvhStatus] = useState(null);
   const [eclipseStatus, setEclipseStatus] = useState(null);
-  const [organosDosis, setOrganosDosis] = useState({ vejiga: '', recto: '', sigma: '' });
+  const [organosDosis, setOrganosDosis] = useState({ vejiga: '', recto: '', sigma: '', utero: '', ganglios: '' });
   const [braquiDatos, setBraquiDatos] = useState(null);
   const [printTrigger, setPrintTrigger] = useState(false);
 
@@ -454,15 +454,26 @@ const BraquiApp = () => {
   // Columnas: "Dosis [cGy]  Dosis relativa [%]  Proporción de volumen de estructura total [%]"
   // D1% = dosis donde el volumen acumulado cae a ≤ 1% (interpolación lineal)
   const parsearDVH = (texto) => {
-    const resultado = { vejiga: '', recto: '', sigma: '' };
-    // Separar por bloques de estructura
+    const resultado = { vejiga: '', recto: '', sigma: '', utero: '', ganglios: '' };
     const bloques = texto.split(/Estructura:\s*/);
     for (const bloque of bloques) {
       const nombreLinea = bloque.split('\n')[0].trim().replace('\r','').toLowerCase();
       let clave = null;
-      if (nombreLinea.includes('rectum') || nombreLinea.includes('recto')) clave = 'recto';
-      else if (nombreLinea.includes('bladder') || nombreLinea.includes('vejiga')) clave = 'vejiga';
-      else if (nombreLinea.includes('sigma') || nombreLinea.includes('sigmoid')) clave = 'sigma';
+      let umbral = 1.0; // D1% para OARs
+      if      (nombreLinea.includes('rectum')  || nombreLinea.includes('recto'))   clave = 'recto';
+      else if (nombreLinea.includes('bladder') || nombreLinea.includes('vejiga'))  clave = 'vejiga';
+      else if (nombreLinea.includes('sigma')   || nombreLinea.includes('sigmoid')) clave = 'sigma';
+      else if (
+        nombreLinea.includes('utero') || nombreLinea.includes('uterus') ||
+        nombreLinea.includes('hr-ctv') || nombreLinea.includes('hrctv') || nombreLinea.includes('hr_ctv') ||
+        nombreLinea.includes('ctv_t') || nombreLinea.includes('ctv-t') ||
+        (nombreLinea.includes('ctv') && !nombreLinea.includes('_n') && !nombreLinea.includes('-n') && !nombreLinea.includes('node'))
+      ) { clave = 'utero'; umbral = 90.0; } // D90%
+      else if (
+        nombreLinea.includes('ganglio') || nombreLinea.includes('nodes') || nombreLinea.includes('node') ||
+        nombreLinea.includes('lnn') || nombreLinea.includes('ctv_n') || nombreLinea.includes('ctv-n') ||
+        nombreLinea.includes('ptv_n') || nombreLinea.includes('paraort') || nombreLinea.includes('paraaort')
+      ) { clave = 'ganglios'; umbral = 90.0; } // D90%
       else continue;
 
       // Extraer filas numéricas — 2 col (dosis, vol%) o 3 col (dosis, dosis_rel, vol%)
@@ -475,22 +486,21 @@ const BraquiApp = () => {
           if (!isNaN(dosis) && !isNaN(vol)) datos.push([dosis, vol]);
         }
       }
-      // Buscar cruce con 1% — interpolación lineal
+      // Buscar cruce con el umbral — interpolación lineal
       for (let i = 0; i < datos.length; i++) {
         const [dosis, vol] = datos[i];
-        if (vol <= 1.0) {
-          let d1;
+        if (vol <= umbral) {
+          let d;
           if (i > 0) {
             const [d0, v0] = datos[i - 1];
-            d1 = d0 + (1.0 - v0) * (dosis - d0) / (vol - v0);
+            d = d0 + (umbral - v0) * (dosis - d0) / (vol - v0);
           } else {
-            d1 = dosis;
+            d = dosis;
           }
-          resultado[clave] = Math.round(d1 * 10) / 10;
+          resultado[clave] = Math.round(d * 10) / 10;
           break;
         }
       }
-      // Si nunca baja de 1%, tomar el máximo registrado
       if (!resultado[clave] && datos.length > 0) {
         resultado[clave] = datos[datos.length - 1][0];
       }
@@ -541,6 +551,7 @@ const BraquiApp = () => {
     setGuardadoStatus('saving');
     const dosisOrganos = {
       vejiga_ext: organosDosis.vejiga, recto_ext: organosDosis.recto, sigma_ext: organosDosis.sigma,
+      utero_ext: organosDosis.utero, ganglios_ext: organosDosis.ganglios,
       vejiga_braqui: braquiDatos?.vejiga || '', recto_braqui: braquiDatos?.recto || '',
       sigma_braqui: braquiDatos?.sigma || '',
       ad: braquiDatos?.ad || '', ai: braquiDatos?.ai || '',
@@ -588,7 +599,7 @@ const BraquiApp = () => {
     setPlanEditandoId(null);
     setDvhStatus(null);
     setEclipseStatus(null);
-    setOrganosDosis({ vejiga: '', recto: '', sigma: '' });
+    setOrganosDosis({ vejiga: '', recto: '', sigma: '', utero: '', ganglios: '' });
     setBraquiDatos(null);
     setSlotActivo(null);
     setMedicoSelId('');
@@ -626,6 +637,8 @@ const BraquiApp = () => {
       vejiga: plan.dosis_organos?.vejiga_ext || '',
       recto: plan.dosis_organos?.recto_ext || '',
       sigma: plan.dosis_organos?.sigma_ext || '',
+      utero: plan.dosis_organos?.utero_ext || '',
+      ganglios: plan.dosis_organos?.ganglios_ext || '',
     });
     const doa = plan.dosis_organos || {};
     setBraquiDatos(
@@ -674,6 +687,8 @@ const BraquiApp = () => {
       vejiga: plan.dosis_organos?.vejiga_ext || '',
       recto: plan.dosis_organos?.recto_ext || '',
       sigma: plan.dosis_organos?.sigma_ext || '',
+      utero: plan.dosis_organos?.utero_ext || '',
+      ganglios: plan.dosis_organos?.ganglios_ext || '',
     });
     const doa = plan.dosis_organos || {};
     setBraquiDatos(
@@ -1086,7 +1101,13 @@ const BraquiApp = () => {
                       <p className="font-bold text-sm text-slate-800">DVH Radioterapia Externa</p>
                       <p className="text-xs text-slate-400 mt-0.5">
                         {dvhStatus === 'ok'
-                          ? `Vejiga: ${organosDosis.vejiga || '—'} cGy · Recto: ${organosDosis.recto || '—'} cGy · Sigma: ${organosDosis.sigma || '—'} cGy`
+                          ? [
+                              `Vejiga: ${organosDosis.vejiga || '—'} cGy`,
+                              `Recto: ${organosDosis.recto || '—'} cGy`,
+                              `Sigma: ${organosDosis.sigma || '—'} cGy`,
+                              organosDosis.utero    ? `Útero D90%: ${organosDosis.utero} cGy` : null,
+                              organosDosis.ganglios ? `Ganglios D90%: ${organosDosis.ganglios} cGy` : null,
+                            ].filter(Boolean).join(' · ')
                           : dvhStatus === 'error' ? 'Error al leer el archivo — verificar formato'
                           : 'Archivo .txt exportado desde el planificador'}
                       </p>
@@ -1478,6 +1499,28 @@ const BraquiApp = () => {
                         </td>
                         <td style={{ padding: '8px 10px', textAlign: 'center', color: dosisTotal ? '#0f172a' : '#94a3b8', fontWeight: '700' }}>
                           {dosisTotal || '_______'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {/* Filas PTV — solo si hay datos del DVH externo */}
+                  {[
+                    { label: 'Útero / CTV-T', key: 'utero' },
+                    { label: 'Ganglios',       key: 'ganglios' },
+                  ].filter(({ key }) => organosDosis[key]).map(({ label, key }, i) => {
+                    const dosisExt = String(organosDosis[key]);
+                    return (
+                      <tr key={key} style={{ background: i % 2 === 0 ? '#f0fdf4' : '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTop: i === 0 ? '2px solid #94a3b8' : undefined }}>
+                        <td style={{ padding: '8px 10px', fontWeight: '700', fontStyle: 'italic' }}>
+                          {label}
+                          <span style={{ fontSize: '6pt', color: '#64748b', fontWeight: '400', marginLeft: '4px' }}>D90%</span>
+                        </td>
+                        <td style={{ padding: '8px 10px', textAlign: 'center', color: '#0f172a', fontWeight: '700' }}>
+                          {dosisExt} cGy
+                        </td>
+                        <td style={{ padding: '8px 10px', textAlign: 'center', color: '#94a3b8' }}>—</td>
+                        <td style={{ padding: '8px 10px', textAlign: 'center', color: '#0f172a', fontWeight: '700' }}>
+                          {dosisExt} cGy
                         </td>
                       </tr>
                     );
