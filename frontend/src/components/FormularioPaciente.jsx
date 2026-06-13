@@ -516,7 +516,7 @@ const BraquiApp = () => {
     const d = parseFloat(d_Gy);
     const ab = parseFloat(ab_Gy);
     if (!D || !d || !ab) return null;
-    return +(D * (d + ab) / (2 + ab)).toFixed(2); // Gy
+    return +Math.round(D * (d + ab) / (2 + ab) * 100); // cGy
   };
 
   const eqd2BraquiLDR = (D_cGy, T_h, ab_Gy) => {
@@ -528,7 +528,7 @@ const BraquiApp = () => {
     const R  = D / T;                              // Gy/h (tasa de dosis media)
     const g  = 1 - (1 - Math.exp(-mu * T)) / (mu * T); // factor Lea-Catcheside
     const BED = D * (1 + (R / (mu * ab)) * g);
-    return +(BED / (1 + 2 / ab)).toFixed(2);       // Gy
+    return +Math.round(BED / (1 + 2 / ab) * 100);   // cGy
   };
 
   // parsearEclipse movido al backend → endpoint /procesar-eclipse
@@ -1601,16 +1601,16 @@ const BraquiApp = () => {
               <div style={{ fontSize: '7pt', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '3px', borderBottom: '1px solid #e2e8f0', paddingBottom: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span>Dosis Equivalente 2 Gy — EQD₂</span>
                 <span style={{ fontSize: '6pt', fontWeight: '400', color: '#94a3b8', textTransform: 'none', letterSpacing: '0' }}>
-                  α/β: OAR = {paramsRB.alfaBeta.vejiga} Gy · PTV = {paramsRB.alfaBeta.ptv} Gy · d = {paramsRB.dPorFraccion} Gy/fx · T½ = {T_MEDIO_H} h
+                  α/β: OAR = {paramsRB.alfaBeta.vejiga} Gy · PTV = {paramsRB.alfaBeta.ptv} Gy · d = {paramsRB.dPorFraccion} Gy/fx · T½ = {T_MEDIO_H} h · valores en cGy
                 </span>
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9pt' }}>
                 <thead>
                   <tr style={{ background: '#4c1d95', color: 'white' }}>
                     <th style={{ padding: '6px 10px', textAlign: 'left', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>Estructura</th>
-                    <th style={{ padding: '6px 10px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>EQD₂ Externa (Gy)</th>
-                    <th style={{ padding: '6px 10px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>EQD₂ BQT LDR (Gy)</th>
-                    <th style={{ padding: '6px 10px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>EQD₂ Total (Gy)</th>
+                    <th style={{ padding: '6px 10px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>EQD₂ Externa (cGy)</th>
+                    <th style={{ padding: '6px 10px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>EQD₂ BQT LDR (cGy)</th>
+                    <th style={{ padding: '6px 10px', textAlign: 'center', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '1px' }}>EQD₂ Total (cGy)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1621,8 +1621,8 @@ const BraquiApp = () => {
                   ].map(({ label, key }, i) => {
                     const q2e = eqd2Ext(organosDosis[key], paramsRB.alfaBeta[key], paramsRB.dPorFraccion);
                     const q2b = eqd2BraquiLDR(braquiDatos?.[key], formData.tiempo_tratamiento_horas, paramsRB.alfaBeta[key]);
-                    const q2t = (q2e != null || q2b != null) ? +((q2e || 0) + (q2b || 0)).toFixed(2) : null;
-                    const fmt = v => v != null ? `${v} Gy` : '—';
+                    const q2t = (q2e != null || q2b != null) ? (q2e || 0) + (q2b || 0) : null;
+                    const fmt = v => v != null ? `${v} cGy` : '—';
                     return (
                       <tr key={key} style={{ background: i % 2 === 0 ? '#f5f3ff' : 'white', borderBottom: '1px solid #e2e8f0' }}>
                         <td style={{ padding: '5px 8px', fontWeight: '700', fontStyle: 'italic' }}>{label}</td>
