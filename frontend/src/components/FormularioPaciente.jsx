@@ -6,8 +6,9 @@ const api = axios.create({ baseURL: import.meta.env.VITE_API_URL ?? '' });
 
 // ─── FUENTES PREDEFINIDAS ────────────────────────────────────────────────────
 const LOTES_PREDEFINIDOS = {
-  LOTE_1: { f1: "M2DR983", f2: "J5HF205", f3: "J5HF207", f4: "J3HF203", f5: "J3HB438" },
-  LOTE_2: { f1: "M2DR982", f2: "J5HF204", f3: "M2DR984", f4: "M4DR985", f5: "M4DR986" }
+  //          f5=Punta   f4=Cuerpo  f3=Base    f1=OvoideD f2=OvoideI
+  LOTE_1: { f5: "J5HF205", f4: "M2DR983", f3: "J5HF207", f1: "J3HF203", f2: "J3HB438" },
+  LOTE_2: { f5: "J5HF204", f4: "M2DR982", f3: "M2DR984", f1: "M4DR985", f2: "M4DR986" },
 };
 
 // ─── ESQUEMAS SVG PARA PDF ───────────────────────────────────────────────────
@@ -1234,14 +1235,14 @@ const BraquiApp = () => {
                         {/* Punta (centro) */}
                         <div className="flex justify-center gap-3 w-full">
                           <div className="w-28 invisible" />
-                          <div className="w-28"><Slot id="f2" label="Punta" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
+                          <div className="w-28"><Slot id="f5" label="Punta" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
                           <div className="w-28 invisible" />
                         </div>
                         <div className="w-2 h-4 bg-slate-300 rounded-sm" />
                         {/* Cuerpo (centro) */}
                         <div className="flex justify-center gap-3 w-full">
                           <div className="w-28 invisible" />
-                          <div className="w-28"><Slot id="f1" label="Cuerpo" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
+                          <div className="w-28"><Slot id="f4" label="Cuerpo" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
                           <div className="w-28 invisible" />
                         </div>
                         <div className="w-2 h-4 bg-slate-300 rounded-sm" />
@@ -1255,9 +1256,9 @@ const BraquiApp = () => {
                         <div className="w-full border-t border-dashed border-slate-300 my-1" />
                         {/* Ovoides (izq y der) */}
                         <div className="flex justify-center gap-3 w-full">
-                          <div className="w-28"><Slot id="f4" label="Ovoide D" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
+                          <div className="w-28"><Slot id="f1" label="Ovoide D" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
                           <div className="w-28 invisible" />
-                          <div className="w-28"><Slot id="f5" label="Ovoide I" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
+                          <div className="w-28"><Slot id="f2" label="Ovoide I" posiciones={formData.posiciones} slotActivo={slotActivo} setSlotActivo={setSlotActivo}/></div>
                         </div>
                       </div>
                     ) : (
