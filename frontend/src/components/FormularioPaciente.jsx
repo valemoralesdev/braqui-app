@@ -7,8 +7,8 @@ const api = axios.create({ baseURL: import.meta.env.VITE_API_URL ?? '' });
 // ─── FUENTES PREDEFINIDAS ────────────────────────────────────────────────────
 const LOTES_PREDEFINIDOS = {
   //          f5=Punta   f4=Cuerpo  f3=Base    f1=OvoideD f2=OvoideI
-  LOTE_1: { f5: "J5HF205", f4: "M2DR983", f3: "J5HF207", f1: "J3HF203", f2: "J3HB438" },
-  LOTE_2: { f5: "J5HF204", f4: "M2DR982", f3: "M2DR984", f1: "M4DR985", f2: "M4DR986" },
+  LOTE_1: { f5: "M2DR983", f4: "J5HF205", f3: "J5HF207", f1: "J3HF203", f2: "J3HB438" },
+  LOTE_2: { f5: "M2DR982", f4: "J5HF204", f3: "M2DR984", f1: "M4DR985", f2: "M4DR986" },
 };
 
 // ─── ESQUEMAS SVG PARA PDF ───────────────────────────────────────────────────
