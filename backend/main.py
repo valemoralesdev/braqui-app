@@ -267,6 +267,44 @@ def _parsear_reference_points(txt: str) -> dict:
         elif pid=="bi":                               res["bi"]=dosis
         elif pid=="a" and not res["ai"]:              res["ai"]=dosis
         elif pid=="b" and not res["bi"]:              res["bi"]=dosis
+
+    # Fallback: algunos informes reportan recto/vejiga como "Reference Lines"
+    # (varios puntos a lo largo de una línea) en lugar de un único punto.
+    # En ese caso se toma el valor máximo de dosis total a lo largo de la línea,
+    # por ser el más representativo del riesgo de toxicidad (criterio GEC-ESTRO/ICRU 89).
+    if not res["recto"] or not res["vejiga"] or not res["sigma"]:
+        lineas = _parsear_reference_lines(txt)
+        for k in ("recto", "vejiga", "sigma"):
+            if not res[k] and lineas.get(k):
+                res[k] = lineas[k]
+    return res
+
+def _parsear_reference_lines(txt: str) -> dict:
+    """Parsea la sección 'Reference Lines' y devuelve la dosis máxima por línea (recto/vejiga/sigma)."""
+    res = {"recto": "", "vejiga": "", "sigma": ""}
+    idx = txt.find("Reference Lines")
+    if idx == -1:
+        idx = txt.find("Líneas de referencia")
+    if idx == -1:
+        return res
+    bloque = txt[idx:idx+4000]
+    fila_patron = re.compile(
+        r'-?[\d.]+[ \t]*cm[ \t]+-?[\d.]+[ \t]*cm[ \t]+-?[\d.]+[ \t]*cm[ \t]+'
+        r'[\d.]+[ \t]*cGy[ \t]+([\d.]+)[ \t]*cGy[ \t]+[\d.]+[ \t]*%'
+    )
+    organos = list(re.finditer(r'^[ \t]*(Recto|Vejiga|Sigma|Sigmoide)\b', bloque, re.MULTILINE))
+    for i, m in enumerate(organos):
+        nombre = m.group(1).lower()
+        inicio = m.start()
+        fin = organos[i+1].start() if i+1 < len(organos) else len(bloque)
+        sub = bloque[inicio:fin]
+        dosis = [float(d.group(1)) for d in fila_patron.finditer(sub)]
+        if not dosis:
+            continue
+        maximo = f"{max(dosis):.1f}"
+        if "recto" in nombre:                  res["recto"]  = maximo
+        elif "vejiga" in nombre:                res["vejiga"] = maximo
+        elif "sigm" in nombre:                  res["sigma"]  = maximo
     return res
 
 def _parsear_seed_collections(txt: str) -> dict:
