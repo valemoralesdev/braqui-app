@@ -582,6 +582,7 @@ const BraquiApp = () => {
       sigma_braqui: braquiDatos?.sigma || '',
       ad: braquiDatos?.ad || '', ai: braquiDatos?.ai || '',
       bd: braquiDatos?.bd || '', bi: braquiDatos?.bi || '',
+      i: braquiDatos?.i || '', ii: braquiDatos?.ii || '', iii: braquiDatos?.iii || '',
       actividades: braquiDatos?.actividades || null,
       imagen_carta: imagenCarta || null,
     };
@@ -670,13 +671,14 @@ const BraquiApp = () => {
     if (plan.dosis_organos?.params_rb) setParamsRB(plan.dosis_organos.params_rb);
     const doa = plan.dosis_organos || {};
     setBraquiDatos(
-      (doa.vejiga_braqui || doa.ad || doa.actividades)
+      (doa.vejiga_braqui || doa.ad || doa.i || doa.actividades)
         ? {
             vejiga: doa.vejiga_braqui || '',
             recto:  doa.recto_braqui  || '',
             sigma:  doa.sigma_braqui  || '',
             ad: doa.ad || '', ai: doa.ai || '',
             bd: doa.bd || '', bi: doa.bi || '',
+            i: doa.i || '', ii: doa.ii || '', iii: doa.iii || '',
             actividades: doa.actividades || null,
           }
         : null
@@ -720,13 +722,14 @@ const BraquiApp = () => {
     if (plan.dosis_organos?.params_rb) setParamsRB(plan.dosis_organos.params_rb);
     const doa = plan.dosis_organos || {};
     setBraquiDatos(
-      (doa.vejiga_braqui || doa.ad || doa.actividades)
+      (doa.vejiga_braqui || doa.ad || doa.i || doa.actividades)
         ? {
             vejiga: doa.vejiga_braqui || '',
             recto: doa.recto_braqui || '',
             sigma: doa.sigma_braqui || '',
             ad: doa.ad || '', ai: doa.ai || '',
             bd: doa.bd || '', bi: doa.bi || '',
+            i: doa.i || '', ii: doa.ii || '', iii: doa.iii || '',
             actividades: doa.actividades || null,
           }
         : null

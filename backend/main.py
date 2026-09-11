@@ -240,7 +240,7 @@ def _extraer_texto_eclipse(b: bytes) -> str:
     return "\n".join(p.extract_text(extraction_mode="layout") or "" for p in reader.pages)
 
 def _parsear_reference_points(txt: str) -> dict:
-    res = {"recto":"","vejiga":"","sigma":"","ad":"","ai":"","bd":"","bi":""}
+    res = {"recto":"","vejiga":"","sigma":"","ad":"","ai":"","bd":"","bi":"","i":"","ii":"","iii":""}
     idx = txt.find("Reference Points")
     if idx == -1:
         idx = txt.find("Puntos de referencia")
@@ -267,6 +267,9 @@ def _parsear_reference_points(txt: str) -> dict:
         elif pid=="bi":                               res["bi"]=dosis
         elif pid=="a" and not res["ai"]:              res["ai"]=dosis
         elif pid=="b" and not res["bi"]:              res["bi"]=dosis
+        elif pid in ("punto i","i"):                  res["i"]=dosis
+        elif pid in ("punto ii","ii"):                res["ii"]=dosis
+        elif pid in ("punto iii","iii"):               res["iii"]=dosis
 
     # Fallback: algunos informes reportan recto/vejiga como "Reference Lines"
     # (varios puntos a lo largo de una línea) en lugar de un único punto.
