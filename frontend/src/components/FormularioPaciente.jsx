@@ -1507,7 +1507,9 @@ const BraquiApp = () => {
                 <div style={{ fontSize: '6.5pt', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
                   Dosis Total Prescripta ({formData.aplicador === 'fletcher' ? 'Punto A' : 'Punto I'})
                 </div>
-                <div style={{ fontSize: '22pt', fontWeight: '900', lineHeight: 1 }}>{formData.dosis_prescripta_braqui} cGy</div>
+                <div style={{ fontSize: '22pt', fontWeight: '900', lineHeight: 1 }}>
+                  {formData.aplicador === 'cupula' && braquiDatos?.i ? braquiDatos.i : formData.dosis_prescripta_braqui} cGy
+                </div>
               </div>
             </div>
 
